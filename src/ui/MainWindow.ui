@@ -51,7 +51,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMGround">
@@ -106,6 +106,7 @@
     <addaction name="separator"/>
     <addaction name="actionFullscreen"/>
     <addaction name="actionNormal"/>
+    <addaction name="actionPlanningMapView"/>
    </widget>
    <addaction name="menuMGround"/>
    <addaction name="menuNetwork"/>
@@ -501,6 +502,14 @@
    </property>
    <property name="text">
     <string>Local 3D View</string>
+   </property>
+  </action>
+  <action name="actionPlanningMapView">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Planning map view</string>
    </property>
   </action>
  </widget>

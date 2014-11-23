@@ -234,6 +234,7 @@ public slots:
     void loadGoogleEarthView();
     /** @brief Load local 3D view */
     void loadLocal3DView();
+    void loadPlanningMapView();
 
     /** @brief Show the online help for users */
     void showHelp();
@@ -337,7 +338,8 @@ protected:
         VIEW_TERMINAL,
         VIEW_LOCAL3D,
         VIEW_GOOGLEEARTH,
-        VIEW_DEFAULT
+        VIEW_DEFAULT,
+        VIEW_PLANNING_MAP
     } VIEW_SECTIONS;
 
     /**
@@ -407,6 +409,7 @@ protected:
     QPointer<SubMainWindow> terminalView;
     QPointer<SubMainWindow> googleEarthView;
     QPointer<SubMainWindow> local3DView;
+    QPointer<SubMainWindow> planningMapView;
 
     // Center widgets
     QPointer<Linecharts> linechartWidget;

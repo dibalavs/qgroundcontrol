@@ -29,6 +29,7 @@
 #include "homeitem.h"
 #include "mapgraphicitem.h"
 #include "waypointlineitem.h"
+#include "basenavitem.h"
 
 namespace mapcontrol
 {
@@ -88,6 +89,9 @@ namespace mapcontrol
         this->update();
         foreach(QGraphicsItem* i,this->childItems())
         {
+            BaseNavItem* b=qgraphicsitem_cast<BaseNavItem*>(i);
+            if(b)
+                b->RefreshPos();
             WayPointItem* w=qgraphicsitem_cast<WayPointItem*>(i);
             if(w)
                 w->RefreshPos();

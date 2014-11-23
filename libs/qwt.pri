@@ -146,4 +146,5 @@ SOURCES += $$QWTSRCDIR/qwt_abstract_legend.cpp \
            $$QWTSRCDIR/qwt_thermo.cpp \
            $$QWTSRCDIR/qwt_transform.cpp \
            $$QWTSRCDIR/qwt_wheel.cpp \
-           $$QWTSRCDIR/qwt_widget_overlay.cpp
+           $$QWTSRCDIR/qwt_widget_overlay.cpp \
+    $$PWD/quadrocopterproject/planning_map_widget.cpp

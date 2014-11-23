@@ -80,6 +80,8 @@ This file is part of the QGROUNDCONTROL project
 
 #include "LogCompressor.h"
 
+#include "../../libs/quadrocopterproject/planning_map_widget.h"
+
 // Set up some constants
 const QString MainWindow::defaultDarkStyle = ":files/styles/style-dark.css";
 const QString MainWindow::defaultLightStyle = ":files/styles/style-light.css";
@@ -210,6 +212,7 @@ void MainWindow::init()
     actions << ui.actionMissionView;
     actions << ui.actionFlightView;
     actions << ui.actionHardwareConfig;
+    actions << ui.actionPlanningMapView;
 
     toolBar->setPerspectiveChangeActions(actions);
 
@@ -353,6 +356,7 @@ void MainWindow::init()
     ui.actionTerminalView->setShortcut(QApplication::translate("MainWindow", "Ctrl+7", 0));
     ui.actionSimulationView->setShortcut(QApplication::translate("MainWindow", "Ctrl+8", 0));
     ui.actionFirmwareUpdateView->setShortcut(QApplication::translate("MainWindow", "Ctrl+9", 0));
+    ui.actionPlanningMapView->setShortcut(QApplication::translate("MainWindow", "Ctrl+0", 0));
     ui.actionFullscreen->setShortcut(QApplication::translate("MainWindow", "Ctrl+Return", 0));
 #endif
 
@@ -478,6 +482,9 @@ void MainWindow::buildCustomWidget()
             case VIEW_GOOGLEEARTH:
                 dock = createDockWidget(googleEarthView,tool,tool->getTitle(),tool->objectName(),(VIEW_SECTIONS)view,location);
                 break;
+            case VIEW_PLANNING_MAP:
+                dock = createDockWidget(planningMapView,tool,tool->getTitle(),tool->objectName(),(VIEW_SECTIONS)view,location);
+                break;
             case VIEW_LOCAL3D:
                 dock = createDockWidget(local3DView,tool,tool->getTitle(),tool->objectName(),(VIEW_SECTIONS)view,location);
                 break;
@@ -569,6 +576,14 @@ void MainWindow::buildCommonWidgets()
     }
 #endif
 
+    if (!planningMapView)
+    {
+        planningMapView = new SubMainWindow(this);
+        planningMapView->setObjectName("VIEW_PLANNING_MAP");
+        planningMapView->setCentralWidget(new PlanningMapWidget(this));
+        addToCentralStackedWidget(planningMapView, VIEW_PLANNING_MAP, tr("Planning Map View"));
+    }
+
     if (!simView)
     {
         simView = new SubMainWindow(this);
@@ -608,6 +623,9 @@ void MainWindow::buildCommonWidgets()
     QGCTabbedInfoView *infoview = new QGCTabbedInfoView(this);
     infoview->addSource(mavlinkDecoder);
     createDockWidget(pilotView,infoview,tr("Info View"),"UAS_INFO_INFOVIEW_DOCKWIDGET",VIEW_FLIGHT,Qt::LeftDockWidgetArea);
+
+    // Planning map
+    createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
 
     // Custom widgets, added last to all menus and layouts
     buildCustomWidget();
@@ -1163,6 +1181,7 @@ void MainWindow::connectCommonActions()
     perspectives->addAction(ui.actionHardwareConfig);
     perspectives->addAction(ui.actionTerminalView);
     perspectives->addAction(ui.actionGoogleEarthView);
+    perspectives->addAction(ui.actionPlanningMapView);
     perspectives->addAction(ui.actionLocal3DView);
     perspectives->setExclusive(true);
 
@@ -1215,6 +1234,11 @@ void MainWindow::connectCommonActions()
         ui.actionGoogleEarthView->setChecked(true);
         ui.actionGoogleEarthView->activate(QAction::Trigger);
     }
+    if (currentView == VIEW_PLANNING_MAP)
+    {
+        ui.actionPlanningMapView->setChecked(true);
+        ui.actionPlanningMapView->activate(QAction::Trigger);
+    }
     if (currentView == VIEW_LOCAL3D)
     {
         ui.actionLocal3DView->setChecked(true);
@@ -1256,6 +1280,7 @@ void MainWindow::connectCommonActions()
     connect(ui.actionHardwareConfig, SIGNAL(triggered()), this, SLOT(loadHardwareConfigView()));
     connect(ui.actionSoftwareConfig,SIGNAL(triggered()),this,SLOT(loadSoftwareConfigView()));
     connect(ui.actionTerminalView,SIGNAL(triggered()),this,SLOT(loadTerminalView()));
+    connect(ui.actionPlanningMapView,SIGNAL(triggered()),this,SLOT(loadPlanningMapView()));
 
     // Help Actions
     connect(ui.actionOnline_Documentation, SIGNAL(triggered()), this, SLOT(showHelp()));
@@ -1654,6 +1679,9 @@ void MainWindow::loadViewState()
         case VIEW_LOCAL3D:
             centerStack->setCurrentWidget(local3DView);
             break;
+        case VIEW_PLANNING_MAP:
+            centerStack->setCurrentWidget(planningMapView);
+            break;
         case VIEW_DEFAULT:
         default:
             if (controlDockWidget)
@@ -1820,6 +1848,17 @@ void MainWindow::loadSimulationView()
         storeViewState();
         currentView = VIEW_SIMULATION;
         ui.actionSimulationView->setChecked(true);
+        loadViewState();
+    }
+}
+
+void MainWindow::loadPlanningMapView()
+{
+    if (currentView != VIEW_PLANNING_MAP)
+    {
+        storeViewState();
+        currentView = VIEW_PLANNING_MAP;
+        ui.actionPlanningMapView->setChecked(true);
         loadViewState();
     }
 }
