@@ -209,6 +209,7 @@ public slots:
     void loadGoogleEarthView();
     /** @brief Load local 3D view */
     void loadLocal3DView();
+    void loadPlanningMapView();
 
     /** @brief Show the online help for users */
     void showHelp();
@@ -304,7 +305,8 @@ protected:
         UNUSED2,               // Unused spacer for backwards compatibility with older settings files.
         VIEW_TERMINAL,         // Terminal interface. Used for communicating with the remote system, usually in a special configuration input mode.
         VIEW_LOCAL3D,          // A local 3D view. Provides a local 3D view that makes visualizing 3D attitude/orientation/pose easy while in operation.
-        VIEW_GOOGLEEARTH       // 3D Google Earth view. A 3D terrain view, though the vehicle is still 2D.
+        VIEW_GOOGLEEARTH,       // 3D Google Earth view. A 3D terrain view, though the vehicle is still 2D.
+        VIEW_PLANNING_MAP
     } VIEW_SECTIONS;
 
     /**
@@ -370,6 +372,7 @@ protected:
     QPointer<SubMainWindow> terminalView;
     QPointer<SubMainWindow> googleEarthView;
     QPointer<SubMainWindow> local3DView;
+    QPointer<SubMainWindow> planningMapView;
 
     // Center widgets
     QPointer<Linecharts> linechartWidget;

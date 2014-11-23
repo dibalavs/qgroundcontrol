@@ -491,7 +491,8 @@ HEADERS += \
     src/QGCComboBox.h \
     src/QGCTemporaryFile.h \
     src/audio/QGCAudioWorker.h \
-    src/QGCQuickWidget.h
+    src/QGCQuickWidget.h \
+    libs/quadrocopterproject/planning_map_widget.h
 
 SOURCES += \
     src/main.cc \

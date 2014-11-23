@@ -62,7 +62,8 @@ HEADERS += $$OPMAPCONTROL_DIR/opmapcontrol.h \
            $$OPMAPCONTROL_DIR/src/internals/projections/mercatorprojectionyandex.h \
            $$OPMAPCONTROL_DIR/src/internals/projections/platecarreeprojection.h \
            $$OPMAPCONTROL_DIR/src/internals/projections/platecarreeprojectionpergo.h \
-           $$OPMAPCONTROL_DIR/src/mapwidget/waypointlineitem.h
+           $$OPMAPCONTROL_DIR/src/mapwidget/waypointlineitem.h \
+    $$PWD/src/mapwidget/basenavitem.h
 FORMS += $$OPMAPCONTROL_DIR/src/mapwidget/mapripform.ui
 SOURCES += $$OPMAPCONTROL_DIR/src/core/alllayersoftype.cpp \
            $$OPMAPCONTROL_DIR/src/core/cache.cpp \
