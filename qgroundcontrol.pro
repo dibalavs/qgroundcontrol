@@ -234,6 +234,8 @@ include(QGCInstaller.pri)
 # Main QGroundControl portion of project file
 #
 
+include(libs/quadrocopterproject/qadrocopterproject.pri)
+
 RESOURCES += qgroundcontrol.qrc
 
 TRANSLATIONS += \
