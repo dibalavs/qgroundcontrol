@@ -218,6 +218,8 @@ include(QGCInstaller.pri)
 # Main QGroundControl portion of project file
 #
 
+include(libs/quadrocopterproject/qadrocopterproject.pri)
+
 RESOURCES += qgroundcontrol.qrc
 
 TRANSLATIONS += \
@@ -496,8 +498,7 @@ HEADERS += \
     src/ui/QGCUASFileView.h \
     src/uas/QGCUASWorker.h \
     src/CmdLineOptParser.h \
-    src/uas/QGXPX4UAS.h \
-    libs/quadrocopterproject/planning_map_widget.h
+    src/uas/QGXPX4UAS.h
 
 SOURCES += \
     src/main.cc \

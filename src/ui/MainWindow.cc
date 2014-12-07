@@ -81,6 +81,8 @@ This file is part of the QGROUNDCONTROL project
 #include "LogCompressor.h"
 
 #include "../../libs/quadrocopterproject/planning_map_widget.h"
+#include "../../libs/quadrocopterproject/planningstatswidget.h"
+#include "../../libs/quadrocopterproject/segment_manager.h"
 
 // Set up some constants
 const QString MainWindow::defaultDarkStyle = ":files/styles/style-dark.css";
@@ -576,11 +578,12 @@ void MainWindow::buildCommonWidgets()
     }
 #endif
 
+    SegmentManager *mgr = new SegmentManager(this);
     if (!planningMapView)
     {
         planningMapView = new SubMainWindow(this);
         planningMapView->setObjectName("VIEW_PLANNING_MAP");
-        planningMapView->setCentralWidget(new PlanningMapWidget(this));
+        planningMapView->setCentralWidget(new PlanningMapWidget(mgr, this));
         addToCentralStackedWidget(planningMapView, VIEW_PLANNING_MAP, tr("Planning Map View"));
     }
 
@@ -626,6 +629,7 @@ void MainWindow::buildCommonWidgets()
 
     // Planning map
     createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
+    createDockWidget(planningMapView,new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
 
     // Custom widgets, added last to all menus and layouts
     buildCustomWidget();

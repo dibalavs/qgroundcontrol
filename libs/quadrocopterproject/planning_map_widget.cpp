@@ -2,9 +2,15 @@
 
 #include <QAction>
 
-SelectionItem::SelectionItem(mapcontrol::MapGraphicItem *map)
+SelectionItem::SelectionItem(SegmentManager *_sm, mapcontrol::MapGraphicItem *map)
 {
     mmap = map;
+    sm = _sm;
+
+    connect(sm, SIGNAL(segmentChanged(int,double,Segment)), this, SLOT(changeSegment(int, double, Segment)));
+    connect(sm, SIGNAL(segmentAdded(int,double,Segment)), this, SLOT(addSegment(int,double,Segment)));
+    connect(sm, SIGNAL(segmentDeleted(int)), this, SLOT(deleteSelection(int)));
+    connect(sm, SIGNAL(segmentSelected(int)), this, SLOT(setSelectedItem(int)));
 
     currentSelection = -1;
     selectionPen.setColor(QColor(Qt::white));
@@ -35,7 +41,7 @@ void SelectionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         return;
     }
 
-    Points& points = selections[currentSelection];
+    Segment& points = selections[currentSelection];
     if (!points.empty()) {
         core::Point pt = mmap->FromLatLngToLocal(points.last());
         int diff = 5;
@@ -54,7 +60,7 @@ void SelectionItem::RefreshPos()
 void SelectionItem::RefreshItem(int i)
 {
     QPolygonF poly;
-    Points& points = selections[i];
+    Segment& points = selections[i];
     QGraphicsPolygonItem* item = selectionItems[i];
     for (int i = 0; i < points.size(); ++i) {
         const core::Point pt = mmap->FromLatLngToLocal(points[i]);
@@ -62,54 +68,6 @@ void SelectionItem::RefreshItem(int i)
     }
 
     item->setPolygon(poly);
-}
-
-void SelectionItem::addPoint(const QPoint& pos)
-{
-    if (currentSelection == -1) {
-        return;
-    }
-
-    selections[currentSelection].push_back(mmap->FromLocalToLatLng(pos.x(), pos.y()));
-    RefreshItem(currentSelection);
-    updateActions();
-}
-
-bool SelectionItem::getSelection(int item, QVector<internals::PointLatLng>& data)
-{
-    if (item < 0 || item >= selections.size()) {
-        return false;
-    }
-
-    data = selections[item];
-    return true;
-}
-
-int SelectionItem::getSelectionsNumber()
-{
-    return selections.size();
-}
-
-void SelectionItem::removePoint()
-{
-    if (currentSelection == -1) {
-        return;
-    }
-
-    selections[currentSelection].removeLast();
-    RefreshItem(currentSelection);
-    updateActions();
-}
-
-void SelectionItem::clearPoints()
-{
-    if (currentSelection == -1) {
-        return;
-    }
-
-    selections[currentSelection].clear();
-    RefreshItem(currentSelection);
-    updateActions();
 }
 
 bool SelectionItem::setSelectedItem(int item)
@@ -145,47 +103,43 @@ bool SelectionItem::deleteSelection(int item)
         return false;
     }
 
-    int oldSel = currentSelection;
-    if (oldSel >= item) {
-        setSelectedItem(-1);
-    }
-
     selections.removeAt(item);
     selectionItems[item]->setParentItem(NULL);
     delete selectionItems[item];
     selectionItems.removeAt(item);
-
-    if (oldSel >= item) {
-        if (!setSelectedItem(oldSel - 1)) {
-            if(!setSelectedItem(selections.size() - 1)) {
-                currentSelection = -1;
-            }
-        }
-    }
-
     return true;
 }
 
-void SelectionItem::deleteCurrentSelection()
+void SelectionItem::changeSegment(int i, double area, const Segment& seg)
 {
-    deleteSelection(currentSelection);
+    (void)area;
+    if (i < 0 || i >= selections.size()) {
+        return;
+    }
+
+    selections[i] = seg;
+    RefreshItem(i);
+    updateActions();
 }
 
-void SelectionItem::addNewSelection()
+void SelectionItem::addSegment(int i, double area, const Segment& seg)
 {
+    (void)area;
+    if (i < selections.size()) {
+        return;
+    }
+
     QGraphicsPolygonItem *pi = new QGraphicsPolygonItem(mmap);
     pi->setPen(selectionPen);
     pi->setBrush(selectionBrush);
-    selectionItems.push_back(pi);
-    selections.push_back(Points());
-    setSelectedItem(selections.size() - 1);
-    emit canAddPoint(true);
-    emit canDeletePoint(false);
-    emit canDeleteSelection(true);
+    selectionItems.insert(i, pi);
+    selections.insert(i, seg);
+    updateActions();
 }
 
-PlanningMapWidget::PlanningMapWidget(QWidget *parent)
+PlanningMapWidget::PlanningMapWidget(SegmentManager *_sm, QWidget *parent)
     :mapcontrol::OPMapWidget(parent)
+    ,sm(_sm)
 {
     //default appears to be Google Hybrid, and is broken currently
     #if defined MAP_DEFAULT_TYPE_BING
@@ -196,7 +150,7 @@ PlanningMapWidget::PlanningMapWidget(QWidget *parent)
     this->SetMapType(MapType::OpenStreetMap);
     #endif
 
-    selection = new SelectionItem(map);
+    selection = new SelectionItem(sm, map);
     selection->setParentItem(map);
     selection->setZValue(3);
 
@@ -211,13 +165,19 @@ PlanningMapWidget::PlanningMapWidget(QWidget *parent)
     QAction *remPoint = new QAction(this);
     remPoint->setText("Remove point");
     connect(selection, SIGNAL(canDeletePoint(bool)), remPoint,SLOT(setEnabled(bool)));
-    connect(remPoint,SIGNAL(triggered()), selection,SLOT(removePoint()));
+    connect(remPoint,SIGNAL(triggered()), sm,SLOT(removeLastPoint()));
     this->addAction(remPoint);
+
+    QAction *finishPoints = new QAction(this);
+    finishPoints->setText("Finish point");
+    connect(selection, SIGNAL(canDeletePoint(bool)), finishPoints,SLOT(setEnabled(bool)));
+    connect(finishPoints,SIGNAL(triggered()), this,SLOT(finishPoints()));
+    this->addAction(finishPoints);
 
     QAction *clearPoints = new QAction(this);
     clearPoints->setText("Clear point");
     connect(selection, SIGNAL(canDeletePoint(bool)), clearPoints,SLOT(setEnabled(bool)));
-    connect(clearPoints,SIGNAL(triggered()), selection,SLOT(clearPoints()));
+    connect(clearPoints,SIGNAL(triggered()), sm,SLOT(clearPoints()));
     this->addAction(clearPoints);
 
     QAction *separator = new QAction(this);
@@ -226,13 +186,13 @@ PlanningMapWidget::PlanningMapWidget(QWidget *parent)
 
     QAction *newSelections = new QAction(this);
     newSelections->setText("New selection");
-    connect(newSelections,SIGNAL(triggered()),selection,SLOT(addNewSelection()));
+    connect(newSelections,SIGNAL(triggered()),this,SLOT(addNewSelection()));
     this->addAction(newSelections);
 
     QAction *delSelections = new QAction(this);
     delSelections->setText("Delete selection");
     connect(selection, SIGNAL(canDeleteSelection(bool)), delSelections,SLOT(setEnabled(bool)));
-    connect(delSelections,SIGNAL(triggered()),selection,SLOT(deleteCurrentSelection()));
+    connect(delSelections,SIGNAL(triggered()),this,SLOT(deleteCurrentSelection()));
     this->addAction(delSelections);
 
     selection->updateActions();
@@ -255,7 +215,7 @@ void PlanningMapWidget::mousePressEvent(QMouseEvent *ev)
 void PlanningMapWidget::mouseReleaseEvent(QMouseEvent *ev)
 {
     if (ev->button() == Qt::LeftButton && currMousePos == ev->pos()) {
-        selection->addPoint(currMousePos);
+        sm->addPoint(map->FromLocalToLatLng(currMousePos.x(), currMousePos.y()));
     }
 
     mapcontrol::OPMapWidget::mouseReleaseEvent(ev);
@@ -263,5 +223,20 @@ void PlanningMapWidget::mouseReleaseEvent(QMouseEvent *ev)
 
 void PlanningMapWidget::addPointActionTriggered()
 {
-    selection->addPoint(currMousePos);
+    sm->addPoint(map->FromLocalToLatLng(currMousePos.x(), currMousePos.y()));
+}
+
+void PlanningMapWidget::addNewSelection()
+{
+    sm->addSegment(sm->getTotalSections(), Segment());
+}
+
+void PlanningMapWidget::deleteCurrentSelection()
+{
+    sm->removeSegment(sm->getSelection());
+}
+
+void PlanningMapWidget::finishPoints()
+{
+    sm->selectSegment(-1);
 }
