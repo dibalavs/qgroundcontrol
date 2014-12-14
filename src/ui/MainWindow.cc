@@ -78,10 +78,13 @@ This file is part of the QGROUNDCONTROL project
 
 #include "LogCompressor.h"
 
-static MainWindow* _instance = NULL;   ///< @brief MainWindow singleton
 #include "../../libs/quadrocopterproject/planning_map_widget.h"
 #include "../../libs/quadrocopterproject/planningstatswidget.h"
 #include "../../libs/quadrocopterproject/segment_manager.h"
+#include "../../libs/quadrocopterproject/planning_map_toolbar.h"
+#include "../../libs/quadrocopterproject/segment_line_manager.h"
+
+static MainWindow* _instance = NULL;   ///< @brief MainWindow singleton
 
 // Set up some constants
 const QString MainWindow::defaultDarkStyle = ":files/styles/style-dark.css";
@@ -216,7 +219,6 @@ MainWindow::MainWindow(QSplashScreen* splashScreen, enum MainWindow::CUSTOM_MODE
     actions << ui.actionMissionView;
     actions << ui.actionFlightView;
     actions << ui.actionEngineersView;
-    actions << ui.actionHardwareConfig;
     actions << ui.actionPlanningMapView;
 
     toolBar->setPerspectiveChangeActions(actions);
@@ -355,7 +357,6 @@ MainWindow::MainWindow(QSplashScreen* splashScreen, enum MainWindow::CUSTOM_MODE
     ui.actionLocal3DView->setShortcut(QApplication::translate("MainWindow", "Ctrl+6", 0));
     ui.actionTerminalView->setShortcut(QApplication::translate("MainWindow", "Ctrl+7", 0));
     ui.actionSimulationView->setShortcut(QApplication::translate("MainWindow", "Ctrl+8", 0));
-    ui.actionFirmwareUpdateView->setShortcut(QApplication::translate("MainWindow", "Ctrl+9", 0));
     ui.actionPlanningMapView->setShortcut(QApplication::translate("MainWindow", "Ctrl+0", 0));
     ui.actionFullscreen->setShortcut(QApplication::translate("MainWindow", "Ctrl+Return", 0));
 #endif
@@ -567,9 +568,12 @@ void MainWindow::buildCommonWidgets()
     }
 #endif
 
-    SegmentManager *mgr = new SegmentManager(this);
+    SegmentManager *mgr = 0;
+    SegmentLineManager *lineMgr = 0;
     if (!planningMapView)
     {
+        mgr = new SegmentManager(this);
+        lineMgr = new SegmentLineManager(mgr, this);
         planningMapView = new SubMainWindow(this);
         planningMapView->setObjectName("VIEW_PLANNING_MAP");
         planningMapView->setCentralWidget(new PlanningMapWidget(mgr, this));
@@ -613,14 +617,11 @@ void MainWindow::buildCommonWidgets()
     menuActionHelper->createToolAction(tr("Actuator Status"), "HEAD_DOWN_DISPLAY_2_DOCKWIDGET");
 
     // Planning map
-    createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
-    createDockWidget(planningMapView,new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
+    createDockWidget(planningMapView, new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
+    createDockWidget(planningMapView, new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
+    createDockWidget(planningMapView, new PlanningMapToolbar(lineMgr, this), tr("Planner toolbar"), "TOOLS_WIDGET", VIEW_PLANNING_MAP, Qt::LeftDockWidgetArea);
 
     createDockWidget(plannerView,new PrimaryFlightDisplay(this),tr("Primary Flight Display"),"PRIMARY_FLIGHT_DISPLAY_DOCKWIDGET",VIEW_FLIGHT,Qt::LeftDockWidgetArea);
-
-    // Planning map
-    createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
-    createDockWidget(planningMapView,new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
 
     // Custom widgets, added last to all menus and layouts
     buildCustomWidget();
@@ -1626,17 +1627,6 @@ void MainWindow::loadViewState()
             break;
         case VIEW_PLANNING_MAP:
             centerStack->setCurrentWidget(planningMapView);
-            break;
-        case VIEW_DEFAULT:
-        default:
-            if (controlDockWidget)
-            {
-                controlDockWidget->hide();
-            }
-            if (listDockWidget)
-            {
-                listDockWidget->show();
-            }
             break;
         }
     }

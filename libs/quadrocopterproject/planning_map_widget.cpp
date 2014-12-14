@@ -1,6 +1,8 @@
 #include "planning_map_widget.h"
+#include "planning_map_toolbar.h"
 
 #include <QAction>
+#include <QLayout>
 
 SelectionItem::SelectionItem(SegmentManager *_sm, mapcontrol::MapGraphicItem *map)
 {

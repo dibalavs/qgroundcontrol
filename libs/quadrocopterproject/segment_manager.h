@@ -14,7 +14,9 @@ public:
     SegmentManager(QObject *parent);
 
     int getSelection() const;
+
     int getTotalSections() const;
+    void getSegment(int i, Segment &pts) const;
 
 public slots:
     void addSegment(int i, const Segment &pts);

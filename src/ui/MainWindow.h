@@ -296,7 +296,6 @@ protected:
 
     typedef enum _VIEW_SECTIONS
     {
-<<<<<<< HEAD
         VIEW_ENGINEER,         // Engineering/Analyze view mode. Used for analyzing data and modifying onboard parameters
         VIEW_MISSION,          // Mission/Map/Plan view mode. Used for setting mission waypoints and high-level system commands.
         VIEW_FLIGHT,           // Flight/Fly/Operate view mode. Used for 1st-person observation of the vehicle.

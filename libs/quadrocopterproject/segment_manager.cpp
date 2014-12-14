@@ -12,6 +12,16 @@ static double calcSegmentArea(const Segment& segment)
     return 1.2;
 }
 
+void SegmentManager::getSegment(int i, Segment &pts) const
+{
+    if (segments.empty() || i < 0 || i >= segments.size()) {
+        qWarning() << "invalid segment no" << i;
+        return;
+    }
+
+    pts = segments[i];
+}
+
 void SegmentManager::addSegment(int i, const Segment &pts)
 {
     segments.insert(i, pts);
@@ -28,6 +38,7 @@ void SegmentManager::changeSegment(int i, const Segment &pts)
 void SegmentManager::removeSegment(int i)
 {
     if (segments.empty() || i < 0 || i >= segments.size()) {
+        qWarning() << "invalid segment no" << i;
         return;
     }
 
