@@ -79,7 +79,6 @@ This file is part of the QGROUNDCONTROL project
 #include "LogCompressor.h"
 
 static MainWindow* _instance = NULL;   ///< @brief MainWindow singleton
-=======
 #include "../../libs/quadrocopterproject/planning_map_widget.h"
 #include "../../libs/quadrocopterproject/planningstatswidget.h"
 #include "../../libs/quadrocopterproject/segment_manager.h"
@@ -617,7 +616,13 @@ void MainWindow::buildCommonWidgets()
     createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
     createDockWidget(planningMapView,new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
 
-    // Add any custom widgets last to all menus and layouts^M
+    createDockWidget(plannerView,new PrimaryFlightDisplay(this),tr("Primary Flight Display"),"PRIMARY_FLIGHT_DISPLAY_DOCKWIDGET",VIEW_FLIGHT,Qt::LeftDockWidgetArea);
+
+    // Planning map
+    createDockWidget(planningMapView,new QGCWaypointListMulti(this),tr("Mission Plan"),"WAYPOINT_LIST_DOCKWIDGET",VIEW_PLANNING_MAP,Qt::BottomDockWidgetArea);
+    createDockWidget(planningMapView,new PlanningStatsWidget(mgr, this),tr("Planner Stats"),"STATISTICS_WIDGET",VIEW_PLANNING_MAP,Qt::RightDockWidgetArea);
+
+    // Custom widgets, added last to all menus and layouts
     buildCustomWidget();
 }
 
