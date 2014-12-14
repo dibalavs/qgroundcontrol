@@ -34,7 +34,7 @@ exists(user_config.pri):infile(user_config.pri, CONFIG) {
 }
 
 linux {
-    linux-g++ | linux-g++-64 {
+    linux-g++ | linux-g++-64 | linux-clang {
         message("Linux build")
         CONFIG += LinuxBuild link_pkgconfig
     } else {
